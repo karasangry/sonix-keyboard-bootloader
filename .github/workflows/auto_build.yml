@@ -1,25 +1,67 @@
-name: Compile Firmware
+name: Compile Bootloaders
 
 on:
   push:
-    branches:
-    - master
+    branches: [ master ]
+  release:
+    types:
+      - published
   pull_request:
-    branches:
-    - master
+  workflow_dispatch:
 
 jobs:
-  Build:
+  build:
     runs-on: ubuntu-latest
 
-    container: debian:bullseye
+    container: debian:latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+
     - name: Build jumploaders
       run: sh build.sh
 
-    - uses: actions/upload-artifact@v2
+    - name: Find artifact files
+      run: |
+        find build/ -type f -name "*.bin" > artifact_files.txt
+        cat artifact_files.txt
+
+    - name: Create temporary directory for artifacts
+      run: |
+        mkdir -p temp_artifacts
+        while IFS= read -r file; do
+          cp "$file" temp_artifacts/
+        done < artifact_files.txt
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
       with:
         name: Pre-Compiled Jumploaders
-        path: 'build/*.bin'
+        path: temp_artifacts/
+        if-no-files-found: error
+        include-hidden-files: false
+
+    - name: Clean up
+      run: rm -rf temp_artifacts
+
+  publish_release:
+    name: Publish (Release)
+    runs-on: ubuntu-latest
+
+    needs: [build]
+
+    if: github.event.release.tag_name
+
+    steps:
+    - uses: actions/download-artifact@v3
+      with:
+        name: Pre-Compiled Jumploaders
+        path: build/
+
+    - uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        name: Release ${{ github.ref_name }}
+        files: build/*.bin
+        fail_on_unmatched_files: true
