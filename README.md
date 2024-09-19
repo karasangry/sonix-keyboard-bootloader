@@ -1,4 +1,11 @@
 # A bootloader for SN32F2x-based keyboards
+
+## Why?
+Some chips in the SN32F2 MCU family have the ISP bootloader exposed in userspace. A jumploader guarding it is needed to avoid bricking by erasing the bootloader.
+
+Affected list:
+- sn32f26x
+
 ## Compiling
 
 A recent version of the [GNU Arm Embedded Toolchain](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm) is recommended for building this project. In order to build, execute the following commands:
@@ -11,8 +18,12 @@ make -j8
 
 ## Flashing the bootloader
 
-The bootloader is flashed with the [Womier Flasher](https://github.com/xyzz/womier-flasher).
+The bootloader is flashed with the `j` option in [Sonix Flasher](https://github.com/SonixQMK/SonixFlasherC).
 
+```
+sonixflasher --vidpid vid/pid --file fw.bin --j
+
+```
 NOTES:
 - if you are using different flasher make sure to pad compiled jumploader up to 512 size with zeros and flash it at offset 0x0
 This can be done on linux using the following command, be sure to replace jumploader-redragon_k556.bin with your keyboads jumploader.
@@ -34,7 +45,7 @@ The specific button to be held will be different depending on the keyboard. See 
 
 ## Flashing keyboard firmware
 
-The QMK firmware can be flashed with the [Womier Flasher](https://github.com/xyzz/womier-flasher).
+The QMK firmware can be flashed with the [Sonix Flasher](https://github.com/SonixQMK/SonixFlasherC).
 
 NOTES:
 - qmk firmware have to be compiled/linked with 0x200 offset in linked script and size = [full size - jumploader size (0x200)] see note about flashing bootloader
