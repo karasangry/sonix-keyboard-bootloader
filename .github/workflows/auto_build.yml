@@ -34,7 +34,7 @@ jobs:
         done < artifact_files.txt
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Pre-Compiled Jumploaders
         path: temp_artifacts/
